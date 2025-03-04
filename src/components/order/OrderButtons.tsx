@@ -323,18 +323,48 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         order.production2?.fullWelding && 
         order.production2?.surfaceFinishing) {
       
-      const isDisabled = !canClientApprove(isClient);
+      if (isClient && order.production2?.inspectionNeeded === undefined) {
+        return (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-gray-600">
+              Do you want to request a welding inspection before proceeding?
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                variant="default"
+                onClick={() => {
+                  requestInspection(order.id, true);
+                  toast.success("Welding inspection requested");
+                  refreshOrder();
+                }}
+              >
+                <CircleCheck className="mr-2" /> Yes
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  requestInspection(order.id, false);
+                  toast.success("Proceeding without welding inspection");
+                  refreshOrder();
+                }}
+              >
+                <CircleX className="mr-2" /> No
+              </Button>
+            </div>
+          </div>
+        );
+      }
       
-      if (order.production2?.inspectionNeeded !== undefined) {
+      if (isClient && order.production2?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
             <p className="text-blue-600 font-medium">
               {order.production2.inspectionNeeded 
-                ? "Welding inspection has been requested. Please click 'No' when ready to proceed." 
-                : "Proceeding without welding inspection"}
+                ? "You have requested a welding inspection" 
+                : "You have chosen to proceed without welding inspection"}
             </p>
             
-            {order.production2.inspectionNeeded && isClient && (
+            {order.production2.inspectionNeeded && (
               <Button 
                 variant="outline"
                 className="mt-2"
@@ -344,64 +374,51 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
                   refreshOrder();
                 }}
               >
-                <CircleX className="mr-2" /> No Inspection Needed
+                <CircleX className="mr-2" /> Cancel Inspection Request
               </Button>
             )}
           </div>
         );
       }
-
-      return (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-gray-600">
-            {isAdmin 
-              ? "Waiting for client to decide on welding inspection" 
-              : "Do you want to request a welding inspection before proceeding?"}
-          </p>
-          <div className="flex gap-2">
-            <Button 
-              variant="default"
-              disabled={isDisabled}
-              onClick={() => {
-                requestInspection(order.id, true);
-                toast.success("Welding inspection requested");
-                refreshOrder();
-              }}
-            >
-              <CircleCheck className="mr-2" /> Yes
-            </Button>
-            <Button 
-              variant="outline"
-              disabled={isDisabled}
-              onClick={() => {
-                requestInspection(order.id, false);
-                toast.success("Proceeding without welding inspection");
-                refreshOrder();
-              }}
-            >
-              <CircleX className="mr-2" /> No
-            </Button>
+      
+      if (isAdmin && order.production2?.inspectionNeeded === undefined) {
+        return (
+          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
+            <p className="text-amber-600 font-medium">Waiting for client to decide on welding inspection</p>
+            <p className="text-sm text-amber-600">The client needs to choose whether to request an inspection before proceeding</p>
           </div>
-          
-          {isAdmin && (
-            <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="text-amber-500 w-5 h-5" />
-                <p className="text-amber-700 text-sm font-medium">Admin Override</p>
+        );
+      }
+      
+      if (isAdmin && order.production2?.inspectionNeeded !== undefined) {
+        return (
+          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
+            <p className="text-blue-600 font-medium">
+              {order.production2.inspectionNeeded 
+                ? "Client has requested a welding inspection" 
+                : "Client has chosen to proceed without welding inspection"}
+            </p>
+            
+            {order.production2.inspectionNeeded && (
+              <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="text-amber-500 w-5 h-5" />
+                  <p className="text-amber-700 text-sm font-medium">Admin Override</p>
+                </div>
+                <p className="text-sm text-amber-600 mb-2">You can override the client's decision if needed:</p>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="border-amber-200 text-amber-700 hover:bg-amber-100"
+                  onClick={() => handleAdminOverride(order.id, 'skipInspection')}
+                >
+                  <ArrowRight className="mr-1 w-3 h-3" /> Skip Inspection & Continue
+                </Button>
               </div>
-              <p className="text-sm text-amber-600 mb-2">You can bypass client decision if needed:</p>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="border-amber-200 text-amber-700 hover:bg-amber-100"
-                onClick={() => handleAdminOverride(order.id, 'skipInspection')}
-              >
-                <ArrowRight className="mr-1 w-3 h-3" /> Skip Inspection & Continue
-              </Button>
-            </div>
-          )}
-        </div>
-      );
+            )}
+          </div>
+        );
+      }
     }
     return null;
   };
@@ -435,18 +452,48 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         order.painting?.primer && 
         order.painting?.painting) {
       
-      const isDisabled = !canClientApprove(isClient);
+      if (isClient && order.painting?.inspectionNeeded === undefined) {
+        return (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-gray-600">
+              Do you want to request a painting inspection before proceeding?
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                variant="default"
+                onClick={() => {
+                  requestPaintingInspection(order.id, true);
+                  toast.success("Painting inspection requested");
+                  refreshOrder();
+                }}
+              >
+                <CircleCheck className="mr-2" /> Yes
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  requestPaintingInspection(order.id, false);
+                  toast.success("Proceeding without painting inspection");
+                  refreshOrder();
+                }}
+              >
+                <CircleX className="mr-2" /> No
+              </Button>
+            </div>
+          </div>
+        );
+      }
       
-      if (order.painting?.inspectionNeeded !== undefined) {
+      if (isClient && order.painting?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
             <p className="text-blue-600 font-medium">
               {order.painting.inspectionNeeded 
-                ? "Painting inspection has been requested. Please click 'No' when ready to proceed." 
-                : "Proceeding without painting inspection"}
+                ? "You have requested a painting inspection" 
+                : "You have chosen to proceed without painting inspection"}
             </p>
             
-            {order.painting.inspectionNeeded && isClient && (
+            {order.painting.inspectionNeeded && (
               <Button 
                 variant="outline"
                 className="mt-2"
@@ -456,64 +503,51 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
                   refreshOrder();
                 }}
               >
-                <CircleX className="mr-2" /> No Inspection Needed
+                <CircleX className="mr-2" /> Cancel Inspection Request
               </Button>
             )}
           </div>
         );
       }
-
-      return (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-gray-600">
-            {isAdmin 
-              ? "Waiting for client to decide on painting inspection" 
-              : "Do you want to request a painting inspection before proceeding?"}
-          </p>
-          <div className="flex gap-2">
-            <Button 
-              variant="default"
-              disabled={isDisabled}
-              onClick={() => {
-                requestPaintingInspection(order.id, true);
-                toast.success("Painting inspection requested");
-                refreshOrder();
-              }}
-            >
-              <CircleCheck className="mr-2" /> Yes
-            </Button>
-            <Button 
-              variant="outline"
-              disabled={isDisabled}
-              onClick={() => {
-                requestPaintingInspection(order.id, false);
-                toast.success("Proceeding without painting inspection");
-                refreshOrder();
-              }}
-            >
-              <CircleX className="mr-2" /> No
-            </Button>
+      
+      if (isAdmin && order.painting?.inspectionNeeded === undefined) {
+        return (
+          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
+            <p className="text-amber-600 font-medium">Waiting for client to decide on painting inspection</p>
+            <p className="text-sm text-amber-600">The client needs to choose whether to request an inspection before proceeding</p>
           </div>
-          
-          {isAdmin && (
-            <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="text-amber-500 w-5 h-5" />
-                <p className="text-amber-700 text-sm font-medium">Admin Override</p>
+        );
+      }
+      
+      if (isAdmin && order.painting?.inspectionNeeded !== undefined) {
+        return (
+          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
+            <p className="text-blue-600 font-medium">
+              {order.painting.inspectionNeeded 
+                ? "Client has requested a painting inspection" 
+                : "Client has chosen to proceed without painting inspection"}
+            </p>
+            
+            {order.painting.inspectionNeeded && (
+              <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="text-amber-500 w-5 h-5" />
+                  <p className="text-amber-700 text-sm font-medium">Admin Override</p>
+                </div>
+                <p className="text-sm text-amber-600 mb-2">You can override the client's decision if needed:</p>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="border-amber-200 text-amber-700 hover:bg-amber-100"
+                  onClick={() => handleAdminOverride(order.id, 'skipPaintingInspection')}
+                >
+                  <ArrowRight className="mr-1 w-3 h-3" /> Skip Inspection & Continue
+                </Button>
               </div>
-              <p className="text-sm text-amber-600 mb-2">You can bypass client decision if needed:</p>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="border-amber-200 text-amber-700 hover:bg-amber-100"
-                onClick={() => handleAdminOverride(order.id, 'skipPaintingInspection')}
-              >
-                <ArrowRight className="mr-1 w-3 h-3" /> Skip Inspection & Continue
-              </Button>
-            </div>
-          )}
-        </div>
-      );
+            )}
+          </div>
+        );
+      }
     }
     return null;
   };
