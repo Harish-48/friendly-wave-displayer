@@ -824,30 +824,30 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
           <span className="stage-text">Quotation</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Material ? 'stage-active' : ['production1', 'production2', 'painting', 'delivery', 'completed'].includes(order.currentStage) ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Material ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {['production1', 'production2', 'painting', 'delivery', 'completed'].includes(order.currentStage) ? <Check className="w-4 h-4" /> : '2'}
+            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material ? <Check className="w-4 h-4" /> : '2'}
           </div>
           <span className="stage-text">Material</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Production1 ? 'stage-active' : ['production2', 'painting', 'delivery', 'completed'].includes(order.currentStage) ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Production1 ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {['production2', 'painting', 'delivery', 'completed'].includes(order.currentStage) ? <Check className="w-4 h-4" /> : '3'}
+            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 ? <Check className="w-4 h-4" /> : '3'}
           </div>
           <span className="stage-text">Production 1</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Production2 ? 'stage-active' : ['painting', 'delivery', 'completed'].includes(order.currentStage) ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Production2 ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {['painting', 'delivery', 'completed'].includes(order.currentStage) ? <Check className="w-4 h-4" /> : '4'}
+            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 ? <Check className="w-4 h-4" /> : '4'}
           </div>
           <span className="stage-text">Production 2</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Painting ? 'stage-active' : ['delivery', 'completed'].includes(order.currentStage) ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Painting ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 && order.currentStage !== OrderStage.Painting ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {['delivery', 'completed'].includes(order.currentStage) ? <Check className="w-4 h-4" /> : '5'}
+            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 && order.currentStage !== OrderStage.Painting ? <Check className="w-4 h-4" /> : '5'}
           </div>
           <span className="stage-text">Painting</span>
         </div>
