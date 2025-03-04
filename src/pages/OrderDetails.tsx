@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -28,10 +27,8 @@ const OrderDetails = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [quotationLink, setQuotationLink] = useState('');
   
-  // Get the order - using the proper param name
   const order = id ? getOrderById(id) : undefined;
 
-  // Initialize form state for each stage
   const [materialInputs, setMaterialInputs] = useState({
     estimation: order?.material?.estimation || '',
     purchaseBill: order?.material?.purchaseBill || '',
@@ -64,7 +61,6 @@ const OrderDetails = () => {
     driverNumber: order?.delivery?.driverNumber || ''
   });
 
-  // Update form state when order changes
   useEffect(() => {
     if (order) {
       setQuotationLink(order.quotation?.link || '');
@@ -103,7 +99,6 @@ const OrderDetails = () => {
     }
   }, [order]);
 
-  // Check authentication and permissions
   useEffect(() => {
     console.log("OrderDetails - params:", id);
     console.log("OrderDetails - found order:", order);
@@ -113,7 +108,6 @@ const OrderDetails = () => {
       return;
     }
 
-    // If no id or order not found, redirect to dashboard
     if (!id || !order) {
       console.log("Order not found, redirecting to dashboard");
       toast.error('Order not found');
@@ -121,7 +115,6 @@ const OrderDetails = () => {
       return;
     }
 
-    // If user is a client and this is not their order, redirect to dashboard
     if (user.role === 'client' && order.clientId !== user.email) {
       toast.error('You do not have permission to view this order');
       navigate('/dashboard');
@@ -129,17 +122,13 @@ const OrderDetails = () => {
     }
   }, [user, order, id, navigate]);
 
-  // Function to refresh the order data
   const refreshOrder = () => {
     setRefreshKey(prevKey => prevKey + 1);
   };
 
-  // Function to check if a stage should be shown
   const shouldShowStage = (stageName: OrderStage) => {
-    // Current stage and completed stages are always shown
     if (order?.currentStage === stageName) return true;
     
-    // Check the order of stages to show completed ones
     const stageOrder = [
       OrderStage.Quotation,
       OrderStage.Material,
@@ -153,24 +142,19 @@ const OrderDetails = () => {
     const currentStageIndex = stageOrder.indexOf(order?.currentStage || OrderStage.Quotation);
     const stageIndex = stageOrder.indexOf(stageName);
     
-    // Show only current and previous stages (completed ones)
     return stageIndex <= currentStageIndex;
   };
 
-  // Check if a stage is accessible based on client actions
   const isStageAccessible = (stageName: OrderStage) => {
     if (!order) return false;
     
-    // Admin can edit only the current stage
     if (user?.role === 'admin') {
       return order.currentStage === stageName;
     }
     
-    // Client can view all visible stages
     return shouldShowStage(stageName);
   };
 
-  // Save quotation link
   const saveQuotation = () => {
     if (id && quotationLink) {
       updateQuotation(id, quotationLink);
@@ -181,7 +165,6 @@ const OrderDetails = () => {
     }
   };
 
-  // Save material details
   const saveMaterial = () => {
     if (id) {
       updateMaterial(id, materialInputs);
@@ -190,7 +173,6 @@ const OrderDetails = () => {
     }
   };
 
-  // Save production 1 details
   const saveProduction1 = () => {
     if (id) {
       updateProduction1(id, production1Inputs);
@@ -199,7 +181,6 @@ const OrderDetails = () => {
     }
   };
 
-  // Save production 2 details
   const saveProduction2 = () => {
     if (id) {
       updateProduction2(id, production2Inputs);
@@ -208,7 +189,6 @@ const OrderDetails = () => {
     }
   };
 
-  // Save painting details
   const savePainting = () => {
     if (id) {
       updatePainting(id, paintingInputs);
@@ -217,7 +197,6 @@ const OrderDetails = () => {
     }
   };
 
-  // Save delivery date
   const saveDeliveryDate = () => {
     if (id && deliveryInputs.date) {
       updateDeliveryDate(id, deliveryInputs.date);
@@ -228,7 +207,6 @@ const OrderDetails = () => {
     }
   };
 
-  // Save delivery details
   const saveDeliveryDetails = () => {
     if (id) {
       updateDeliveryDetails(id, {
@@ -289,12 +267,9 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* Add Order Buttons component for approvals/confirmations */}
         <OrderButtons order={order} refreshOrder={refreshOrder} />
 
-        {/* Order flow stages with conditional rendering - only show current & previous stages */}
         <div className="space-y-6 mt-6">
-          {/* Quotation Section */}
           {shouldShowStage(OrderStage.Quotation) && (
             <StageCard
               title="Quotation"
@@ -334,7 +309,6 @@ const OrderDetails = () => {
             </StageCard>
           )}
 
-          {/* Material Section */}
           {shouldShowStage(OrderStage.Material) && (
             <StageCard
               title="Material Management"
@@ -400,7 +374,6 @@ const OrderDetails = () => {
             </StageCard>
           )}
 
-          {/* Production Part 1 Section */}
           {shouldShowStage(OrderStage.Production1) && (
             <StageCard
               title="Production & Decoration Part 1"
@@ -482,7 +455,6 @@ const OrderDetails = () => {
             </StageCard>
           )}
 
-          {/* Production Part 2 Section */}
           {shouldShowStage(OrderStage.Production2) && (
             <StageCard
               title="Production & Decoration Part 2"
@@ -530,15 +502,14 @@ const OrderDetails = () => {
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
                   <p className="text-blue-700">
                     {order.production2.inspectionNeeded 
-                      ? "Inspection has been requested" 
-                      : "Proceeding without inspection"}
+                      ? "Welding inspection has been requested" 
+                      : "Proceeding without welding inspection"}
                   </p>
                 </div>
               )}
             </StageCard>
           )}
 
-          {/* Painting Section */}
           {shouldShowStage(OrderStage.Painting) && (
             <StageCard
               title="Painting & Polishing"
@@ -594,7 +565,6 @@ const OrderDetails = () => {
             </StageCard>
           )}
 
-          {/* Delivery Section */}
           {shouldShowStage(OrderStage.Delivery) && (
             <StageCard
               title="Delivery"
@@ -687,15 +657,20 @@ const OrderDetails = () => {
                 </div>
               )}
               
-              {order.delivery?.successful && (
+              {order.delivery?.successful === false && (
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-amber-700">Order receipt issues reported</p>
+                </div>
+              )}
+              
+              {order.delivery?.successful === true && (
                 <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                  <p className="text-green-700">Delivery confirmed as successful</p>
+                  <p className="text-green-700">Order received successfully</p>
                 </div>
               )}
             </StageCard>
           )}
           
-          {/* Completed Stage */}
           {order.currentStage === OrderStage.Completed && (
             <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
               <h3 className="text-xl font-bold text-green-700 mb-2">Order Completed</h3>

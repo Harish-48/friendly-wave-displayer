@@ -32,7 +32,8 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     requestPaintingInspection,
     confirmDeliveryDate,
     confirmDelivery,
-    moveToNextStage
+    moveToNextStage,
+    updateDeliveryDate
   } = useOrder();
 
   const isAdmin = user?.role === 'admin';
@@ -62,12 +63,12 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         return !!order.production1?.designApproved;
       
       case OrderStage.Production2:
-        // Admin can proceed only if inspection decision is made
-        return order.production2?.inspectionNeeded !== undefined;
+        // Admin can proceed only if inspection decision is made AND client chose not to inspect
+        return order.production2?.inspectionNeeded === false;
       
       case OrderStage.Painting:
-        // Admin can proceed only if painting inspection decision is made
-        return order.painting?.inspectionNeeded !== undefined;
+        // Admin can proceed only if painting inspection decision is made AND client chose not to inspect
+        return order.painting?.inspectionNeeded === false;
       
       case OrderStage.Delivery:
         // Admin can mark order as completed only if delivery is confirmed successful
@@ -347,9 +348,24 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
             <p className="text-blue-600 font-medium">
               {order.production2.inspectionNeeded 
-                ? "Inspection has been requested" 
-                : "Proceeding without inspection"}
+                ? "Welding inspection has been requested. Please click 'No' when ready to proceed." 
+                : "Proceeding without welding inspection"}
             </p>
+            
+            {/* Add a "No" button if inspection was requested and client is viewing */}
+            {order.production2.inspectionNeeded && isClient && (
+              <Button 
+                variant="outline"
+                className="mt-2"
+                onClick={() => {
+                  requestInspection(order.id, false);
+                  toast.success("Proceeding without inspection");
+                  refreshOrder();
+                }}
+              >
+                <CircleX className="mr-2" /> No Inspection Needed
+              </Button>
+            )}
           </div>
         );
       }
@@ -358,8 +374,8 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         <div className="flex flex-col gap-3">
           <p className="text-sm text-gray-600">
             {isAdmin 
-              ? "Waiting for client to decide on inspection" 
-              : "Do you want to request an inspection before proceeding?"}
+              ? "Waiting for client to decide on welding inspection" 
+              : "Do you want to request a welding inspection before proceeding?"}
           </p>
           <div className="flex gap-2">
             <Button 
@@ -367,7 +383,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
               disabled={isDisabled}
               onClick={() => {
                 requestInspection(order.id, true);
-                toast.success("Inspection requested");
+                toast.success("Welding inspection requested");
                 refreshOrder();
               }}
             >
@@ -378,7 +394,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
               disabled={isDisabled}
               onClick={() => {
                 requestInspection(order.id, false);
-                toast.success("Proceeding without inspection");
+                toast.success("Proceeding without welding inspection");
                 refreshOrder();
               }}
             >
@@ -415,7 +431,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
   // =========================================================
   const renderProduction2NextButton = () => {
     if (shouldShowStageButtons(OrderStage.Production2) && 
-        order.production2?.inspectionNeeded !== undefined && 
+        order.production2?.inspectionNeeded === false && 
         isAdmin) {
       
       return (
@@ -453,9 +469,24 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
             <p className="text-blue-600 font-medium">
               {order.painting.inspectionNeeded 
-                ? "Painting inspection has been requested" 
+                ? "Painting inspection has been requested. Please click 'No' when ready to proceed." 
                 : "Proceeding without painting inspection"}
             </p>
+            
+            {/* Add a "No" button if inspection was requested and client is viewing */}
+            {order.painting.inspectionNeeded && isClient && (
+              <Button 
+                variant="outline"
+                className="mt-2"
+                onClick={() => {
+                  requestPaintingInspection(order.id, false);
+                  toast.success("Proceeding without painting inspection");
+                  refreshOrder();
+                }}
+              >
+                <CircleX className="mr-2" /> No Inspection Needed
+              </Button>
+            )}
           </div>
         );
       }
@@ -521,7 +552,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
   // =========================================================
   const renderPaintingNextButton = () => {
     if (shouldShowStageButtons(OrderStage.Painting) && 
-        order.painting?.inspectionNeeded !== undefined && 
+        order.painting?.inspectionNeeded === false && 
         isAdmin) {
       
       return (
@@ -558,6 +589,40 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
             <p className="text-sm text-green-500">
               Delivery date: {new Date(order.delivery.date).toLocaleDateString()}
             </p>
+          </div>
+        );
+      }
+      
+      // If delivery date was rejected, show date change for client
+      if (order.delivery?.confirmed === false && isClient) {
+        return (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-gray-600">
+              Please suggest a new delivery date:
+            </p>
+            <div className="flex flex-col space-y-2">
+              <input
+                type="date"
+                id="new-delivery-date"
+                className="border rounded p-2"
+                min={new Date().toISOString().split('T')[0]}
+              />
+              <Button 
+                onClick={() => {
+                  const newDate = (document.getElementById("new-delivery-date") as HTMLInputElement).value;
+                  if (newDate) {
+                    updateDeliveryDate(order.id, newDate);
+                    confirmDeliveryDate(order.id, true);
+                    toast.success("New delivery date suggested and confirmed");
+                    refreshOrder();
+                  } else {
+                    toast.error("Please select a valid date");
+                  }
+                }}
+              >
+                <Calendar className="mr-2" /> Confirm New Date
+              </Button>
+            </div>
           </div>
         );
       }
@@ -632,11 +697,32 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
       
       // If delivery is already marked
       if (order.delivery?.successful !== undefined) {
+        // If delivery was unsuccessful but client is viewing, show "Order Received" button
+        if (order.delivery.successful === false && isClient) {
+          return (
+            <div className="flex flex-col gap-3">
+              <div className="p-4 border rounded-md bg-amber-50 border-amber-200">
+                <p className="text-amber-600 font-medium">You previously reported issues with this delivery</p>
+              </div>
+              <Button 
+                variant="default"
+                onClick={() => {
+                  confirmDelivery(order.id, true);
+                  toast.success("Order marked as received successfully");
+                  refreshOrder();
+                }}
+              >
+                <Check className="mr-2" /> Order Received Successfully
+              </Button>
+            </div>
+          );
+        }
+        
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-green-50 border-green-200">
             <p className="text-green-600 font-medium">
               {order.delivery.successful 
-                ? "Delivery has been confirmed as successful" 
+                ? "Order has been received successfully" 
                 : "Delivery issues have been reported"}
             </p>
           </div>
@@ -647,8 +733,8 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         <div className="flex flex-col gap-3">
           <p className="text-sm text-gray-600">
             {isAdmin 
-              ? "Waiting for client to confirm successful delivery" 
-              : "Was the delivery successful?"}
+              ? "Waiting for client to confirm order receipt" 
+              : "Have you received the order successfully?"}
           </p>
           <div className="flex gap-2">
             <Button 
@@ -656,22 +742,22 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
               disabled={isDisabled}
               onClick={() => {
                 confirmDelivery(order.id, true);
-                toast.success("Delivery confirmed as successful");
+                toast.success("Order received successfully");
                 refreshOrder();
               }}
             >
-              <Check className="mr-2" /> Yes
+              <Check className="mr-2" /> Order Received
             </Button>
             <Button 
               variant="destructive"
               disabled={isDisabled}
               onClick={() => {
                 confirmDelivery(order.id, false);
-                toast.error("Delivery issues reported");
+                toast.error("Order not received properly");
                 refreshOrder();
               }}
             >
-              <X className="mr-2" /> No
+              <X className="mr-2" /> Not Received
             </Button>
           </div>
           

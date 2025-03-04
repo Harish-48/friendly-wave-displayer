@@ -233,7 +233,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
             timestamp: data.delivery_timestamp || new Date().toISOString()
           } : undefined
         };
-      });
+      };
         
       setOrders(mappedOrders);
     } catch (error) {
@@ -603,6 +603,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
         production2_inspection_needed: needed
       };
       
+      // Only proceed to next stage if client specifically chose NOT to inspect
       if (!needed) {
         updateData.current_stage = OrderStage.Painting;
       }
@@ -622,6 +623,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
               } : undefined
             };
             
+            // Only proceed to next stage if client specifically chose NOT to inspect
             if (!needed) {
               updatedOrder.currentStage = OrderStage.Painting;
             }
@@ -697,6 +699,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
         painting_inspection_needed: needed
       };
       
+      // Only proceed to next stage if client specifically chose NOT to inspect
       if (!needed) {
         updateData.current_stage = OrderStage.Delivery;
       }
@@ -716,6 +719,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
               } : undefined
             };
             
+            // Only proceed to next stage if client specifically chose NOT to inspect
             if (!needed) {
               updatedOrder.currentStage = OrderStage.Delivery;
             }
@@ -847,6 +851,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
         delivery_successful: successful
       };
       
+      // Only mark as completed if successful
       if (successful) {
         updateData.current_stage = OrderStage.Completed;
         updateData.status = OrderStatus.Completed;
@@ -867,6 +872,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
               } : undefined
             };
             
+            // Only mark as completed if successful
             if (successful) {
               updatedOrder.currentStage = OrderStage.Completed;
               updatedOrder.status = OrderStatus.Completed;
@@ -878,7 +884,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
         })
       );
       
-      toast.success(successful ? 'Delivery confirmed as successful' : 'Delivery issues reported');
+      toast.success(successful ? 'Order received successfully' : 'Order receipt issues reported');
     } catch (error) {
       console.error('Error confirming delivery:', error);
       toast.error('Failed to update delivery status');
@@ -939,10 +945,12 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
         return !!order.production1?.designApproved;
       
       case OrderStage.Production2:
-        return order.production2?.inspectionNeeded !== undefined;
+        // Can only proceed if inspection is explicitly NOT needed
+        return order.production2?.inspectionNeeded === false;
       
       case OrderStage.Painting:
-        return order.painting?.inspectionNeeded !== undefined;
+        // Can only proceed if painting inspection is explicitly NOT needed
+        return order.painting?.inspectionNeeded === false;
       
       case OrderStage.Delivery:
         return !!order.delivery?.successful;
