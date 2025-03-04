@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
@@ -233,7 +234,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
             timestamp: data.delivery_timestamp || new Date().toISOString()
           } : undefined
         };
-      };
+      });
         
       setOrders(mappedOrders);
     } catch (error) {
