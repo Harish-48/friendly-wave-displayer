@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
@@ -39,39 +38,31 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
   const isAdmin = user?.role === 'admin';
   const isClient = user?.role === 'client';
   
-  // Helper function to check if the client can approve something
   const canClientApprove = (isClient: boolean) => {
     return isClient;
   };
 
-  // Helper function to check if admin can proceed to next stage
   const canAdminProceed = (order: Order, stage: OrderStage): boolean => {
     switch (stage) {
       case OrderStage.Quotation:
-        // Admin can proceed only if quotation is approved
         return !!order.quotation?.approved;
       
       case OrderStage.Material:
-        // Admin can proceed only if all material fields are filled
         return !!(order.material?.estimation && 
                 order.material?.purchaseBill && 
                 order.material?.loading && 
                 order.material?.arrival);
       
       case OrderStage.Production1:
-        // Admin can proceed only if design is approved
         return !!order.production1?.designApproved;
       
       case OrderStage.Production2:
-        // Admin can proceed only if inspection decision is made AND client chose not to inspect
         return order.production2?.inspectionNeeded === false;
       
       case OrderStage.Painting:
-        // Admin can proceed only if painting inspection decision is made AND client chose not to inspect
         return order.painting?.inspectionNeeded === false;
       
       case OrderStage.Delivery:
-        // Admin can mark order as completed only if delivery is confirmed successful
         return !!order.delivery?.successful;
       
       default:
@@ -79,14 +70,27 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     }
   };
 
-  // Only show buttons for the current stage
   const shouldShowStageButtons = (stageName: OrderStage) => {
     return order.currentStage === stageName;
   };
 
-  // =========================================================
-  // Admin Override - allows admin to bypass client approval steps
-  // =========================================================
+  const isStageCompleted = (checkStage: OrderStage): boolean => {
+    return getStageValue(order.currentStage) > getStageValue(checkStage);
+  };
+  
+  const getStageValue = (stage: OrderStage): number => {
+    switch (stage) {
+      case OrderStage.Quotation: return 1;
+      case OrderStage.Material: return 2;
+      case OrderStage.Production1: return 3;
+      case OrderStage.Production2: return 4;
+      case OrderStage.Painting: return 5;
+      case OrderStage.Delivery: return 6;
+      case OrderStage.Completed: return 7;
+      default: return 0;
+    }
+  };
+
   const handleAdminOverride = (orderId: string, action: string) => {
     switch (action) {
       case 'approveQuotation':
@@ -117,14 +121,8 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     refreshOrder();
   };
 
-  // =========================================================
-  // Step 1: Quotation Approval (Client Only)
-  // =========================================================
   const renderQuotationButtons = () => {
-    // Only show if we're in quotation stage and there's a quotation link
     if (shouldShowStageButtons(OrderStage.Quotation) && order.quotation?.link) {
-      // For client: enable buttons
-      // For admin: disable buttons (client must approve)
       const isDisabled = !canClientApprove(isClient);
       const isApproved = order.quotation?.approved;
 
@@ -169,7 +167,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
             </Button>
           </div>
           
-          {/* Admin override */}
           {isAdmin && (
             <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
               <div className="flex items-center gap-2 mb-2">
@@ -193,12 +190,8 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 2: Material Management - Next Stage Button (Admin Only)
-  // =========================================================
   const renderMaterialNextButton = () => {
     if (shouldShowStageButtons(OrderStage.Material) && isAdmin) {
-      // Check if material data is added
       const materialDataExists = order.material?.estimation && 
                                 order.material?.purchaseBill && 
                                 order.material?.loading && 
@@ -232,9 +225,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 3: Production Part 1 - Design Approval (Client Only)
-  // =========================================================
   const renderDesignApprovalButtons = () => {
     if (shouldShowStageButtons(OrderStage.Production1) && order.production1?.design) {
       const isDisabled = !canClientApprove(isClient);
@@ -281,7 +271,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
             </Button>
           </div>
           
-          {/* Admin override */}
           {isAdmin && (
             <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
               <div className="flex items-center gap-2 mb-2">
@@ -305,9 +294,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 3: Production Part 1 - Next Button (Admin Only, after Design Approval)
-  // =========================================================
   const renderProduction1NextButton = () => {
     if (shouldShowStageButtons(OrderStage.Production1) && 
         order.production1?.designApproved && 
@@ -332,9 +318,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 4: Production Part 2 - Inspection Request (Client Only)
-  // =========================================================
   const renderInspectionButtons = () => {
     if (shouldShowStageButtons(OrderStage.Production2) && 
         order.production2?.fullWelding && 
@@ -342,7 +325,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
       
       const isDisabled = !canClientApprove(isClient);
       
-      // If inspection status is already set
       if (order.production2?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
@@ -352,7 +334,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
                 : "Proceeding without welding inspection"}
             </p>
             
-            {/* Add a "No" button if inspection was requested and client is viewing */}
             {order.production2.inspectionNeeded && isClient && (
               <Button 
                 variant="outline"
@@ -402,7 +383,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
             </Button>
           </div>
           
-          {/* Admin override */}
           {isAdmin && (
             <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
               <div className="flex items-center gap-2 mb-2">
@@ -426,9 +406,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 4: Production Part 2 - Next Button (Admin Only, after Inspection Decision)
-  // =========================================================
   const renderProduction2NextButton = () => {
     if (shouldShowStageButtons(OrderStage.Production2) && 
         order.production2?.inspectionNeeded === false && 
@@ -453,9 +430,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 5: Painting - Painting Inspection Request (Client Only)
-  // =========================================================
   const renderPaintingInspectionButtons = () => {
     if (shouldShowStageButtons(OrderStage.Painting) && 
         order.painting?.primer && 
@@ -463,7 +437,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
       
       const isDisabled = !canClientApprove(isClient);
       
-      // If inspection status is already set
       if (order.painting?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
@@ -473,7 +446,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
                 : "Proceeding without painting inspection"}
             </p>
             
-            {/* Add a "No" button if inspection was requested and client is viewing */}
             {order.painting.inspectionNeeded && isClient && (
               <Button 
                 variant="outline"
@@ -523,7 +495,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
             </Button>
           </div>
           
-          {/* Admin override */}
           {isAdmin && (
             <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
               <div className="flex items-center gap-2 mb-2">
@@ -547,9 +518,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 5: Painting - Next Button (Admin Only, after Painting Inspection Decision)
-  // =========================================================
   const renderPaintingNextButton = () => {
     if (shouldShowStageButtons(OrderStage.Painting) && 
         order.painting?.inspectionNeeded === false && 
@@ -574,14 +542,10 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 6: Delivery - Confirm Delivery Date (Client Only)
-  // =========================================================
   const renderDeliveryConfirmButtons = () => {
     if (shouldShowStageButtons(OrderStage.Delivery) && order.delivery?.date) {
       const isDisabled = !canClientApprove(isClient);
       
-      // If delivery date is already confirmed
       if (order.delivery?.confirmed) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-green-50 border-green-200">
@@ -593,7 +557,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         );
       }
       
-      // If delivery date was rejected, show date change for client
       if (order.delivery?.confirmed === false && isClient) {
         return (
           <div className="flex flex-col gap-3">
@@ -659,7 +622,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
             </Button>
           </div>
           
-          {/* Admin override */}
           {isAdmin && (
             <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
               <div className="flex items-center gap-2 mb-2">
@@ -683,9 +645,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 6: Delivery - Confirm Successful Delivery (Client Only)
-  // =========================================================
   const renderDeliverySuccessButtons = () => {
     if (shouldShowStageButtons(OrderStage.Delivery) && 
         order.delivery?.confirmed && 
@@ -695,9 +654,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
       
       const isDisabled = !canClientApprove(isClient);
       
-      // If delivery is already marked
       if (order.delivery?.successful !== undefined) {
-        // If delivery was unsuccessful but client is viewing, show "Order Received" button
         if (order.delivery.successful === false && isClient) {
           return (
             <div className="flex flex-col gap-3">
@@ -761,7 +718,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
             </Button>
           </div>
           
-          {/* Admin override */}
           {isAdmin && (
             <div className="mt-4 p-3 border border-amber-200 bg-amber-50 rounded-md">
               <div className="flex items-center gap-2 mb-2">
@@ -785,9 +741,6 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // =========================================================
-  // Step 6: Delivery - Complete Order Button (Admin Only, after successful delivery confirmation)
-  // =========================================================
   const renderCompleteOrderButton = () => {
     if (shouldShowStageButtons(OrderStage.Delivery) && 
         order.delivery?.successful && 
@@ -812,42 +765,40 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
     return null;
   };
 
-  // Rendered UI based on current stage
   return (
     <div className="space-y-6 mt-6">
-      {/* Progress visual indicator showing current stage */}
       <div className="order-stage-indicator">
-        <div className={`stage-item ${order.currentStage === OrderStage.Quotation ? 'stage-active' : order.currentStage !== OrderStage.Quotation ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Quotation ? 'stage-active' : isStageCompleted(OrderStage.Quotation) ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {order.currentStage !== OrderStage.Quotation ? <Check className="w-4 h-4" /> : '1'}
+            {isStageCompleted(OrderStage.Quotation) ? <Check className="w-4 h-4" /> : '1'}
           </div>
           <span className="stage-text">Quotation</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Material ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Material ? 'stage-active' : isStageCompleted(OrderStage.Material) ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material ? <Check className="w-4 h-4" /> : '2'}
+            {isStageCompleted(OrderStage.Material) ? <Check className="w-4 h-4" /> : '2'}
           </div>
           <span className="stage-text">Material</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Production1 ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Production1 ? 'stage-active' : isStageCompleted(OrderStage.Production1) ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 ? <Check className="w-4 h-4" /> : '3'}
+            {isStageCompleted(OrderStage.Production1) ? <Check className="w-4 h-4" /> : '3'}
           </div>
           <span className="stage-text">Production 1</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Production2 ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Production2 ? 'stage-active' : isStageCompleted(OrderStage.Production2) ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 ? <Check className="w-4 h-4" /> : '4'}
+            {isStageCompleted(OrderStage.Production2) ? <Check className="w-4 h-4" /> : '4'}
           </div>
           <span className="stage-text">Production 2</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Painting ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 && order.currentStage !== OrderStage.Painting ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Painting ? 'stage-active' : isStageCompleted(OrderStage.Painting) ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material && order.currentStage !== OrderStage.Production1 && order.currentStage !== OrderStage.Production2 && order.currentStage !== OrderStage.Painting ? <Check className="w-4 h-4" /> : '5'}
+            {isStageCompleted(OrderStage.Painting) ? <Check className="w-4 h-4" /> : '5'}
           </div>
           <span className="stage-text">Painting</span>
         </div>
@@ -860,30 +811,23 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         </div>
       </div>
 
-      {/* Step 1: Quotation Approval */}
       {renderQuotationButtons()}
       
-      {/* Step 2: Material Management - Next Stage */}
       {renderMaterialNextButton()}
       
-      {/* Step 3: Production Part 1 - Design Approval */}
       {renderDesignApprovalButtons()}
       {renderProduction1NextButton()}
       
-      {/* Step 4: Production Part 2 - Inspection Request */}
       {renderInspectionButtons()}
       {renderProduction2NextButton()}
       
-      {/* Step 5: Painting - Painting Inspection */}
       {renderPaintingInspectionButtons()}
       {renderPaintingNextButton()}
       
-      {/* Step 6: Delivery - Confirm Date & Success */}
       {renderDeliveryConfirmButtons()}
       {renderDeliverySuccessButtons()}
       {renderCompleteOrderButton()}
       
-      {/* Completed Order */}
       {order.currentStage === OrderStage.Completed && (
         <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-green-50 border-green-200">
           <p className="text-green-600 font-medium">Order has been completed successfully</p>
