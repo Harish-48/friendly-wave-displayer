@@ -824,9 +824,9 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
           <span className="stage-text">Quotation</span>
         </div>
         
-        <div className={`stage-item ${order.currentStage === OrderStage.Material ? 'stage-active' : order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material ? 'stage-completed' : ''}`}>
+        <div className={`stage-item ${order.currentStage === OrderStage.Material ? 'stage-active' : ['production1', 'production2', 'painting', 'delivery', 'completed'].includes(order.currentStage) ? 'stage-completed' : ''}`}>
           <div className="stage-icon">
-            {order.currentStage !== OrderStage.Quotation && order.currentStage !== OrderStage.Material ? <Check className="w-4 h-4" /> : '2'}
+            {['production1', 'production2', 'painting', 'delivery', 'completed'].includes(order.currentStage) ? <Check className="w-4 h-4" /> : '2'}
           </div>
           <span className="stage-text">Material</span>
         </div>
