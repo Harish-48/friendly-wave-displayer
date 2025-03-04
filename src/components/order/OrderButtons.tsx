@@ -319,42 +319,44 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
   };
 
   const renderInspectionButtons = () => {
-    if (shouldShowStageButtons(OrderStage.Production2) && 
-        order.production2?.fullWelding && 
-        order.production2?.surfaceFinishing) {
-      
+    if (shouldShowStageButtons(OrderStage.Production2)) {
+      // For client: If no decision has been made yet, show Yes/No buttons
       if (isClient && order.production2?.inspectionNeeded === undefined) {
-        return (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-gray-600">
-              Do you want to request a welding inspection before proceeding?
-            </p>
-            <div className="flex gap-2">
-              <Button 
-                variant="default"
-                onClick={() => {
-                  requestInspection(order.id, true);
-                  toast.success("Welding inspection requested");
-                  refreshOrder();
-                }}
-              >
-                <CircleCheck className="mr-2" /> Yes
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  requestInspection(order.id, false);
-                  toast.success("Proceeding without welding inspection");
-                  refreshOrder();
-                }}
-              >
-                <CircleX className="mr-2" /> No
-              </Button>
+        // Only show buttons if production details are available
+        if (order.production2?.fullWelding && order.production2?.surfaceFinishing) {
+          return (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-gray-600">
+                Do you want to request a welding inspection before proceeding?
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  variant="default"
+                  onClick={() => {
+                    requestInspection(order.id, true);
+                    toast.success("Welding inspection requested");
+                    refreshOrder();
+                  }}
+                >
+                  <CircleCheck className="mr-2" /> Yes
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    requestInspection(order.id, false);
+                    toast.success("Proceeding without welding inspection");
+                    refreshOrder();
+                  }}
+                >
+                  <CircleX className="mr-2" /> No
+                </Button>
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
       }
       
+      // For client: If decision has been made, show feedback
       if (isClient && order.production2?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
@@ -381,6 +383,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         );
       }
       
+      // For admin: Always show the waiting message if no decision made
       if (isAdmin && order.production2?.inspectionNeeded === undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
@@ -390,6 +393,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         );
       }
       
+      // For admin: Show client's decision and override option if needed
       if (isAdmin && order.production2?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
@@ -448,42 +452,44 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
   };
 
   const renderPaintingInspectionButtons = () => {
-    if (shouldShowStageButtons(OrderStage.Painting) && 
-        order.painting?.primer && 
-        order.painting?.painting) {
-      
+    if (shouldShowStageButtons(OrderStage.Painting)) {
+      // For client: If no decision has been made yet, show Yes/No buttons
       if (isClient && order.painting?.inspectionNeeded === undefined) {
-        return (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-gray-600">
-              Do you want to request a painting inspection before proceeding?
-            </p>
-            <div className="flex gap-2">
-              <Button 
-                variant="default"
-                onClick={() => {
-                  requestPaintingInspection(order.id, true);
-                  toast.success("Painting inspection requested");
-                  refreshOrder();
-                }}
-              >
-                <CircleCheck className="mr-2" /> Yes
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  requestPaintingInspection(order.id, false);
-                  toast.success("Proceeding without painting inspection");
-                  refreshOrder();
-                }}
-              >
-                <CircleX className="mr-2" /> No
-              </Button>
+        // Only show buttons if painting details are available
+        if (order.painting?.primer && order.painting?.painting) {
+          return (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-gray-600">
+                Do you want to request a painting inspection before proceeding?
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  variant="default"
+                  onClick={() => {
+                    requestPaintingInspection(order.id, true);
+                    toast.success("Painting inspection requested");
+                    refreshOrder();
+                  }}
+                >
+                  <CircleCheck className="mr-2" /> Yes
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    requestPaintingInspection(order.id, false);
+                    toast.success("Proceeding without painting inspection");
+                    refreshOrder();
+                  }}
+                >
+                  <CircleX className="mr-2" /> No
+                </Button>
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
       }
       
+      // For client: If decision has been made, show feedback
       if (isClient && order.painting?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
@@ -510,6 +516,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         );
       }
       
+      // For admin: Always show the waiting message if no decision made
       if (isAdmin && order.painting?.inspectionNeeded === undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
@@ -519,6 +526,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         );
       }
       
+      // For admin: Show client's decision and override option if needed
       if (isAdmin && order.painting?.inspectionNeeded !== undefined) {
         return (
           <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
