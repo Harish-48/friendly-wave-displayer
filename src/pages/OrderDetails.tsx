@@ -97,7 +97,7 @@ const OrderDetails = () => {
         driverNumber: order.delivery?.driverNumber || ''
       });
     }
-  }, [order]);
+  }, [order, refreshKey]);
 
   useEffect(() => {
     console.log("OrderDetails - params:", id);
