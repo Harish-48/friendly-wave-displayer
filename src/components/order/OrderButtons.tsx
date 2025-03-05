@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
@@ -57,9 +58,11 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         return !!order.production1?.designApproved;
       
       case OrderStage.Production2:
+        // Only allow proceeding if client explicitly chose NOT to inspect
         return order.production2?.inspectionNeeded === false;
       
       case OrderStage.Painting:
+        // Only allow proceeding if client explicitly chose NOT to inspect
         return order.painting?.inspectionNeeded === false;
       
       case OrderStage.Delivery:
@@ -327,7 +330,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
           return (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-gray-600">
-                Do you want to request a welding inspection before proceeding?
+                Would you like to request a welding inspection before proceeding?
               </p>
               <div className="flex gap-2">
                 <Button 
@@ -381,27 +384,27 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         }
       }
       
-      // For admin: Always show the waiting message if no decision made
-      if (isAdmin && order.production2?.inspectionNeeded === undefined) {
-        return (
-          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
-            <p className="text-amber-600 font-medium">Waiting for client to decide on welding inspection</p>
-            <p className="text-sm text-amber-600">The client needs to choose whether to request an inspection before proceeding</p>
-          </div>
-        );
-      }
-      
-      // For admin: Show client's decision if made
-      if (isAdmin && order.production2?.inspectionNeeded !== undefined) {
-        return (
-          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
-            <p className="text-blue-600 font-medium">
-              {order.production2.inspectionNeeded 
-                ? "Client has requested a welding inspection" 
-                : "Client has chosen to proceed without welding inspection"}
-            </p>
-          </div>
-        );
+      // For admin: Always show the waiting message if client hasn't made a decision
+      if (isAdmin && order.production2?.fullWelding && order.production2?.surfaceFinishing) {
+        if (order.production2?.inspectionNeeded === undefined) {
+          return (
+            <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
+              <p className="text-amber-600 font-medium">Waiting for client to decide on welding inspection</p>
+              <p className="text-sm text-amber-600">The client needs to choose whether to request an inspection before proceeding</p>
+            </div>
+          );
+        } else {
+          // For admin: Show client's decision if made
+          return (
+            <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
+              <p className="text-blue-600 font-medium">
+                {order.production2.inspectionNeeded 
+                  ? "Client has requested a welding inspection" 
+                  : "Client has chosen to proceed without welding inspection"}
+              </p>
+            </div>
+          );
+        }
       }
     }
     return null;
@@ -440,7 +443,7 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
           return (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-gray-600">
-                Do you want to request a painting inspection before proceeding?
+                Would you like to request a painting inspection before proceeding?
               </p>
               <div className="flex gap-2">
                 <Button 
@@ -494,27 +497,27 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
         }
       }
       
-      // For admin: Always show the waiting message if no decision made
-      if (isAdmin && order.painting?.inspectionNeeded === undefined) {
-        return (
-          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
-            <p className="text-amber-600 font-medium">Waiting for client to decide on painting inspection</p>
-            <p className="text-sm text-amber-600">The client needs to choose whether to request an inspection before proceeding</p>
-          </div>
-        );
-      }
-      
-      // For admin: Show client's decision if made
-      if (isAdmin && order.painting?.inspectionNeeded !== undefined) {
-        return (
-          <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
-            <p className="text-blue-600 font-medium">
-              {order.painting.inspectionNeeded 
-                ? "Client has requested a painting inspection" 
-                : "Client has chosen to proceed without painting inspection"}
-            </p>
-          </div>
-        );
+      // For admin: Always show the waiting message if client hasn't made a decision
+      if (isAdmin && order.painting?.primer && order.painting?.painting) {
+        if (order.painting?.inspectionNeeded === undefined) {
+          return (
+            <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-amber-50 border-amber-200">
+              <p className="text-amber-600 font-medium">Waiting for client to decide on painting inspection</p>
+              <p className="text-sm text-amber-600">The client needs to choose whether to request an inspection before proceeding</p>
+            </div>
+          );
+        } else {
+          // For admin: Show client's decision if made
+          return (
+            <div className="flex flex-col items-center gap-2 p-4 border rounded-md bg-blue-50 border-blue-200">
+              <p className="text-blue-600 font-medium">
+                {order.painting.inspectionNeeded 
+                  ? "Client has requested a painting inspection" 
+                  : "Client has chosen to proceed without painting inspection"}
+              </p>
+            </div>
+          );
+        }
       }
     }
     return null;
