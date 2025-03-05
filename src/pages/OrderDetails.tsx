@@ -155,6 +155,25 @@ const OrderDetails = () => {
     return shouldShowStage(stageName);
   };
 
+  const isStagePendingInspection = (stageName: OrderStage) => {
+    if (!order) return false;
+    
+    switch (stageName) {
+      case OrderStage.Production2:
+        return order.currentStage === OrderStage.Production2 && 
+               order.production2?.fullWelding && 
+               order.production2?.surfaceFinishing &&
+               order.production2?.inspectionNeeded === undefined;
+      case OrderStage.Painting:
+        return order.currentStage === OrderStage.Painting && 
+               order.painting?.primer && 
+               order.painting?.painting &&
+               order.painting?.inspectionNeeded === undefined;
+      default:
+        return false;
+    }
+  };
+
   const saveQuotation = () => {
     if (id && quotationLink) {
       updateQuotation(id, quotationLink);
@@ -460,6 +479,7 @@ const OrderDetails = () => {
               title="Production & Decoration Part 2"
               active={order.currentStage === OrderStage.Production2}
               completed={['painting', 'delivery', 'completed'].includes(order.currentStage)}
+              isPending={isStagePendingInspection(OrderStage.Production2)}
             >
               {user?.role === 'admin' && isStageAccessible(OrderStage.Production2) ? (
                 <div className="space-y-4">
@@ -515,6 +535,7 @@ const OrderDetails = () => {
               title="Painting & Polishing"
               active={order.currentStage === OrderStage.Painting}
               completed={['delivery', 'completed'].includes(order.currentStage)}
+              isPending={isStagePendingInspection(OrderStage.Painting)}
             >
               {user?.role === 'admin' && isStageAccessible(OrderStage.Painting) ? (
                 <div className="space-y-4">

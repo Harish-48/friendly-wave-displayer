@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
@@ -59,10 +58,12 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
       
       case OrderStage.Production2:
         // Only allow proceeding if client explicitly chose NOT to inspect
+        // If inspectionNeeded is undefined, it means client hasn't made a decision yet
         return order.production2?.inspectionNeeded === false;
       
       case OrderStage.Painting:
         // Only allow proceeding if client explicitly chose NOT to inspect
+        // If inspectionNeeded is undefined, it means client hasn't made a decision yet
         return order.painting?.inspectionNeeded === false;
       
       case OrderStage.Delivery:
@@ -411,25 +412,34 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
   };
 
   const renderProduction2NextButton = () => {
-    if (shouldShowStageButtons(OrderStage.Production2) && 
-        order.production2?.inspectionNeeded === false && 
-        isAdmin) {
+    if (shouldShowStageButtons(OrderStage.Production2) && isAdmin) {
+      const canProceed = canAdminProceed(order, OrderStage.Production2);
       
-      return (
-        <div className="mt-4">
-          <Button 
-            variant="default" 
-            className="w-full"
-            onClick={() => {
-              moveToNextStage(order.id);
-              toast.success("Proceeding to Painting");
-              refreshOrder();
-            }}
-          >
-            <ArrowRight className="mr-2" /> Proceed to Painting
-          </Button>
-        </div>
-      );
+      // Only render if client has made a decision (even if they chose to have inspection)
+      if (order.production2?.inspectionNeeded !== undefined) {
+        return (
+          <div className="mt-4">
+            <Button 
+              variant="default" 
+              className={`w-full ${!canProceed ? 'opacity-50' : ''}`}
+              disabled={!canProceed}
+              onClick={() => {
+                moveToNextStage(order.id);
+                toast.success("Proceeding to Painting");
+                refreshOrder();
+              }}
+            >
+              <ArrowRight className="mr-2" /> Proceed to Painting
+            </Button>
+            
+            {order.production2?.inspectionNeeded && (
+              <p className="text-sm text-amber-600 mt-2">
+                Waiting for client to complete welding inspection before proceeding
+              </p>
+            )}
+          </div>
+        );
+      }
     }
     return null;
   };
@@ -524,25 +534,34 @@ export const OrderButtons: React.FC<OrderButtonsProps> = ({ order, refreshOrder 
   };
 
   const renderPaintingNextButton = () => {
-    if (shouldShowStageButtons(OrderStage.Painting) && 
-        order.painting?.inspectionNeeded === false && 
-        isAdmin) {
+    if (shouldShowStageButtons(OrderStage.Painting) && isAdmin) {
+      const canProceed = canAdminProceed(order, OrderStage.Painting);
       
-      return (
-        <div className="mt-4">
-          <Button 
-            variant="default" 
-            className="w-full"
-            onClick={() => {
-              moveToNextStage(order.id);
-              toast.success("Proceeding to Delivery");
-              refreshOrder();
-            }}
-          >
-            <ArrowRight className="mr-2" /> Proceed to Delivery
-          </Button>
-        </div>
-      );
+      // Only render if client has made a decision (even if they chose to have inspection)
+      if (order.painting?.inspectionNeeded !== undefined) {
+        return (
+          <div className="mt-4">
+            <Button 
+              variant="default" 
+              className={`w-full ${!canProceed ? 'opacity-50' : ''}`}
+              disabled={!canProceed}
+              onClick={() => {
+                moveToNextStage(order.id);
+                toast.success("Proceeding to Delivery");
+                refreshOrder();
+              }}
+            >
+              <ArrowRight className="mr-2" /> Proceed to Delivery
+            </Button>
+            
+            {order.painting?.inspectionNeeded && (
+              <p className="text-sm text-amber-600 mt-2">
+                Waiting for client to complete painting inspection before proceeding
+              </p>
+            )}
+          </div>
+        );
+      }
     }
     return null;
   };
