@@ -85,12 +85,12 @@ const Login = () => {
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-muted-foreground text-center">
               <div className="mt-2">
-                <p>
+{/*                 <p>
                   Admin: admin@pvt.com / 12345678
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                </p> */}
+{/*                 <p className="text-xs text-muted-foreground mt-1">
                   Clients: Use your email with default password: 12345678
-                </p>
+                </p> */}
                 <p className="text-xs text-muted-foreground mt-2">
                   <Link to="/" className="hover:underline">← Back to home</Link>
                 </p>
